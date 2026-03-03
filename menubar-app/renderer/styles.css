@@ -1,0 +1,300 @@
+/* -----------------------------------------------
+   TrackIt Menu Bar — Popup Styles
+   Matches the app's purple/pink theme
+   ----------------------------------------------- */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg:          #1a1a2e;
+  --bg-section:  #16213e;
+  --bg-input:    #0f3460;
+  --border:      #2d2d5e;
+  --text:        #e0e0f0;
+  --text-muted:  #8888aa;
+  --accent:      #a855f7;   /* purple-500 */
+  --accent-hot:  #ec4899;   /* pink-500 */
+  --stop-bg:     #7f1d1d;
+  --stop-hover:  #991b1b;
+  --green:       #22c55e;
+  --red:         #ef4444;
+  --radius:      8px;
+  --font:        -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg:          #f5f3ff;
+    --bg-section:  #ede9fe;
+    --bg-input:    #ffffff;
+    --border:      #c4b5fd;
+    --text:        #1e1b4b;
+    --text-muted:  #6d28d9;
+    --accent:      #7c3aed;
+    --accent-hot:  #db2777;
+    --stop-bg:     #fee2e2;
+    --stop-hover:  #fecaca;
+    --green:       #16a34a;
+    --red:         #dc2626;
+  }
+}
+
+html, body {
+  width: 320px;
+  height: 440px;
+  overflow: hidden;
+  position: relative;
+  font-family: var(--font);
+  font-size: 13px;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+/* ---- Header ---- */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.logo {
+  font-size: 14px;
+  font-weight: 700;
+  background: linear-gradient(90deg, var(--accent), var(--accent-hot));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  transition: background 0.3s;
+}
+.status-dot.online  { background: var(--green); }
+.status-dot.offline { background: var(--red); }
+
+/* ---- Sections ---- */
+.section {
+  padding: 12px 14px;
+}
+
+.section-title {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 0 14px;
+}
+
+/* ---- Active section ---- */
+.active-section {
+  min-height: 96px;
+  display: flex;
+  align-items: center;
+}
+
+.idle-state {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  width: 100%;
+}
+.idle-icon { font-size: 18px; }
+.idle-text  { font-size: 13px; }
+
+.running-state {
+  width: 100%;
+}
+.running-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+.running-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+}
+.elapsed {
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+.running-description {
+  font-size: 13px;
+  color: var(--text);
+  margin-bottom: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---- Buttons ---- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 14px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font);
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.15s, background 0.15s;
+}
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.btn:active:not(:disabled) { opacity: 0.8; }
+
+.btn-stop {
+  width: 100%;
+  background: var(--stop-bg);
+  color: #fca5a5;
+}
+.btn-stop:hover:not(:disabled) { background: var(--stop-hover); }
+
+.btn-start {
+  padding: 6px 18px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-hot));
+  color: #fff;
+  flex-shrink: 0;
+}
+.btn-start:hover:not(:disabled) { opacity: 0.85; }
+
+.btn-retry {
+  margin-top: 12px;
+  background: var(--accent);
+  color: #fff;
+  padding: 7px 20px;
+}
+.btn-retry:hover { opacity: 0.85; }
+
+/* ---- Form ---- */
+.form-section {}
+
+#taskForm {
+  display: flex;
+  gap: 8px;
+}
+
+.task-input {
+  flex: 1;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 13px;
+  padding: 6px 10px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.task-input::placeholder { color: var(--text-muted); }
+.task-input:focus { border-color: var(--accent); }
+
+.form-error {
+  color: var(--red);
+  font-size: 11px;
+  margin-top: 5px;
+  min-height: 14px;
+}
+
+/* ---- Recent list ---- */
+.recent-section {
+  padding-top: 10px;
+  overflow: hidden;
+}
+
+.recent-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 148px;
+  overflow-y: auto;
+}
+
+.recent-list::-webkit-scrollbar { width: 4px; }
+.recent-list::-webkit-scrollbar-track { background: transparent; }
+.recent-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.recent-empty {
+  color: var(--text-muted);
+  font-size: 12px;
+  padding: 4px 0;
+}
+
+.recent-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 8px;
+  border-radius: 6px;
+  background: var(--bg-section);
+  gap: 8px;
+}
+.recent-desc {
+  flex: 1;
+  font-size: 12px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.recent-dur {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+/* ---- Offline overlay ---- */
+.offline-overlay {
+  position: absolute;
+  inset: 0;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  z-index: 100;
+}
+.offline-icon  { font-size: 32px; }
+.offline-title { font-size: 14px; font-weight: 600; color: var(--text); }
+.offline-sub   { font-size: 12px; color: var(--text-muted); }
+.offline-sub code {
+  font-family: 'SF Mono', 'Menlo', monospace;
+  background: var(--bg-section);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 11px;
+}
+
+/* ---- Utility ---- */
+.hidden { display: none !important; }

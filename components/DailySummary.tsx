@@ -143,6 +143,7 @@ export default function DailySummaryComponent({ summaries, onDeleteTask, onUpdat
 
     // Collapse all days except selectedDate by default
     const todayStr = new Date().toISOString().slice(0, 10);
+    const dayRefs = useRef<Record<string, HTMLDivElement | null>>({});
     const [collapsedDays, setCollapsedDays] = useState<Record<string, boolean>>(() => {
         const initial: Record<string, boolean> = {};
         summaries.forEach((s) => {
@@ -161,6 +162,14 @@ export default function DailySummaryComponent({ summaries, onDeleteTask, onUpdat
             next[selectedDate] = false;
             return next;
         });
+
+        const el = dayRefs.current[selectedDate];
+        if (el) {
+            const rect = el.getBoundingClientRect();
+            if (rect.top < 0 || rect.bottom > window.innerHeight) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
     }, [selectedDate]);
 
     // Toggle a day and notify parent of the new selected date
@@ -351,6 +360,7 @@ export default function DailySummaryComponent({ summaries, onDeleteTask, onUpdat
                     return (
                         <div
                             key={summary.date}
+                            ref={(el) => { dayRefs.current[summary.date] = el; }}
                             className={`transition-all duration-200 ${isCollapsed
                                 ? 'bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4'
                                 : 'border-l-4 border-primary-500 pl-4'
