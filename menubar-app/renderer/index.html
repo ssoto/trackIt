@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'" />
+  <title>TrackIt</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <span class="logo">TrackIt</span>
+    <span class="status-dot" id="statusDot" title="Connecting…"></span>
+  </header>
+
+  <!-- Active task section -->
+  <section class="section active-section">
+    <!-- Idle state -->
+    <div id="idleState" class="idle-state hidden">
+      <span class="idle-icon">⏱</span>
+      <p class="idle-text">No active task</p>
+    </div>
+
+    <!-- Running state -->
+    <div id="runningState" class="running-state hidden">
+      <div class="running-header">
+        <span class="running-label">ACTIVE</span>
+        <span class="elapsed" id="elapsedDisplay">0:00:00</span>
+      </div>
+      <p class="running-description" id="activeDescription">—</p>
+      <button class="btn btn-stop" id="stopBtn">Stop task</button>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- New task form -->
+  <section class="section form-section">
+    <form id="taskForm" autocomplete="off">
+      <input
+        type="text"
+        id="taskInput"
+        class="task-input"
+        placeholder="What are you working on?"
+        maxlength="200"
+        required
+      />
+      <button type="submit" class="btn btn-start" id="startBtn">Start</button>
+    </form>
+    <p class="form-error hidden" id="formError"></p>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- Recent tasks -->
+  <section class="section recent-section">
+    <h2 class="section-title">Recent</h2>
+    <ul class="recent-list" id="recentList">
+      <li class="recent-empty">No recent tasks</li>
+    </ul>
+  </section>
+
+  <!-- Offline overlay -->
+  <div class="offline-overlay hidden" id="offlineOverlay">
+    <span class="offline-icon">⚡</span>
+    <p class="offline-title">Server not reachable</p>
+    <p class="offline-sub">Start TrackIt with <code>make dev</code></p>
+    <button class="btn btn-retry" id="retryBtn">Retry</button>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>

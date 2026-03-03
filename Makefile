@@ -1,4 +1,4 @@
-.PHONY: help install dev build start clean test lint format db-init db-reset
+.PHONY: help install dev build start clean test lint format db-init db-reset docker-build docker-run docker-stop docker-logs applet-dev applet-build applet-install applet-uninstall
 
 # Default target - show help
 help:
@@ -15,6 +15,15 @@ help:
 	@echo "  make format     - Format code with prettier"
 	@echo "  make db-init    - Initialize the database"
 	@echo "  make db-reset   - Reset the database (WARNING: deletes all data)"
+	@echo "  make docker-build - Build Docker image"
+	@echo "  make docker-run   - Run application in Docker"
+	@echo "  make docker-stop  - Stop Docker container"
+	@echo ""
+	@echo "Menu bar applet commands:"
+	@echo "  make applet-dev       - Run menu bar applet in development mode"
+	@echo "  make applet-build     - Build menu bar applet (.app bundle)"
+	@echo "  make applet-install   - Build and install applet to ~/Applications"
+	@echo "  make applet-uninstall - Remove applet from ~/Applications"
 	@echo ""
 
 # Install dependencies
@@ -91,3 +100,62 @@ setup: install db-init
 	@echo ""
 	@echo "Run 'make dev' to start the development server"
 	@echo ""
+
+# Docker configuration
+DOCKER_IMAGE_NAME = trackit
+DOCKER_CONTAINER_NAME = trackit-app
+DOCKER_PORT = 3000
+
+# Build Docker image
+docker-build:
+	@echo "Building Docker image..."
+	docker build -t $(DOCKER_IMAGE_NAME) .
+	@echo "✓ Docker image built"
+
+# Run Docker container
+docker-run:
+	@echo "Starting Docker container..."
+	docker run -d \
+		--name $(DOCKER_CONTAINER_NAME) \
+		-p $(DOCKER_PORT):3000 \
+		-v $$(pwd)/database:/app/database \
+		$(DOCKER_IMAGE_NAME)
+	@echo "✓ Container started at http://localhost:$(DOCKER_PORT)"
+
+# Stop Docker container
+docker-stop:
+	@echo "Stopping Docker container..."
+	-docker stop $(DOCKER_CONTAINER_NAME)
+	-docker rm $(DOCKER_CONTAINER_NAME)
+	@echo "✓ Container stopped"
+
+# View Docker logs
+docker-logs:
+	docker logs -f $(DOCKER_CONTAINER_NAME)
+
+# ---- Menu bar applet ----
+
+# Run applet in development mode (requires Electron installed)
+applet-dev:
+	@echo "Starting TrackIt menu bar applet (dev)..."
+	@cd menubar-app && npm install --silent && npx electron .
+
+# Build applet as a .app bundle
+applet-build:
+	@echo "Building TrackIt.app..."
+	@cd menubar-app && npm install --silent && npx electron-builder --mac dir
+	@echo "✓ Built: menubar-app/dist/mac*/TrackIt.app"
+
+# Build and install applet to ~/Applications
+applet-install: applet-build
+	@echo "Installing TrackIt.app to ~/Applications..."
+	@rm -rf ~/Applications/TrackIt.app
+	@cp -r menubar-app/dist/mac*/TrackIt.app ~/Applications/
+	@xattr -d com.apple.quarantine ~/Applications/TrackIt.app 2>/dev/null || true
+	@echo "✓ Installed — launch TrackIt from Spotlight or ~/Applications"
+
+# Remove applet from ~/Applications
+applet-uninstall:
+	@echo "Removing TrackIt.app from ~/Applications..."
+	@rm -rf ~/Applications/TrackIt.app
+	@echo "✓ TrackIt.app removed"
