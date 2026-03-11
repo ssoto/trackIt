@@ -39,3 +39,15 @@ next-env.d.ts
 /database/*.db
 /database/*.db-shm
 /database/*.db-wal
+
+# claude code (local overrides only)
+.claude/settings.local.json
+
+# diverger tool artifacts
+.diverger-backup/
+.diverger-meta.json
+.eslintrc.json
+
+# test output
+test-results/
+playwright-report/
