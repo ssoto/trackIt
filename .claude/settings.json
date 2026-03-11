@@ -1,0 +1,291 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(DOCKER_BUILDKIT=1 docker:*)",
+      "Bash(docker build:*)",
+      "Bash(docker buildx:*)",
+      "Bash(docker compose:*)",
+      "Bash(docker exec:*)",
+      "Bash(docker images:*)",
+      "Bash(docker logs:*)",
+      "Bash(docker ps:*)",
+      "Bash(docker run:*)",
+      "Bash(docker scout:*)",
+      "Bash(docker:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npm run playwright:*)",
+      "Bash(npm run start:*)",
+      "Bash(npm run test:e2e:*)",
+      "Bash(npx @next/bundle-analyzer:*)",
+      "Bash(npx eslint:*)",
+      "Bash(npx next lint:*)",
+      "Bash(npx next:*)",
+      "Bash(npx playwright codegen:*)",
+      "Bash(npx playwright install:*)",
+      "Bash(npx playwright show-report:*)",
+      "Bash(npx playwright show-trace:*)",
+      "Bash(npx playwright test:*)",
+      "Bash(npx react-scripts:*)",
+      "Bash(npx ts-node:*)",
+      "Bash(npx tsc --noEmit:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx tsx:*)",
+      "Bash(npx vite:*)",
+      "Bash(pnpm playwright:*)",
+      "Bash(pnpm test:e2e:*)",
+      "Bash(yarn playwright:*)",
+      "Bash(yarn test:e2e:*)"
+    ],
+    "deny": [
+      "Edit(**/*.key)",
+      "Edit(**/*.p12)",
+      "Edit(**/*.pem)",
+      "Edit(**/*.pfx)",
+      "Edit(**/.aws/**)",
+      "Edit(**/.ssh/**)",
+      "Edit(**/credentials*)",
+      "Edit(**/secrets/**)",
+      "Edit(.env*)",
+      "Read(**/*.key)",
+      "Read(**/*.p12)",
+      "Read(**/*.pem)",
+      "Read(**/*.pfx)",
+      "Read(**/.aws/**)",
+      "Read(**/.ssh/**)",
+      "Read(**/credentials*)",
+      "Read(**/secrets/**)",
+      "Read(.env*)",
+      "Write(**/*.key)",
+      "Write(**/*.p12)",
+      "Write(**/*.pem)",
+      "Write(**/*.pfx)",
+      "Write(**/.aws/**)",
+      "Write(**/.ssh/**)",
+      "Write(**/credentials*)",
+      "Write(**/secrets/**)",
+      "Write(.env*)"
+    ]
+  },
+  "sandbox": {
+    "filesystem": {
+      "denyRead": [
+        "~/.aws/credentials",
+        "~/.ssh/**",
+        "~/.gnupg/**",
+        "~/.config/gh/hosts.yml"
+      ]
+    }
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/secret-scanner.sh",
+            "timeout": 10,
+            "statusMessage": "Scanning for secrets..."
+          }
+        ],
+        "matcher": "Write"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/destructive-cmd-blocker.sh",
+            "timeout": 10,
+            "statusMessage": "Checking for destructive commands..."
+          }
+        ],
+        "matcher": "Bash"
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/check-long-lines.sh",
+            "timeout": 5,
+            "statusMessage": "Checking line lengths..."
+          }
+        ],
+        "matcher": "Write"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/check-trailing-newline.sh",
+            "timeout": 5,
+            "statusMessage": "Checking trailing newline..."
+          }
+        ],
+        "matcher": "Write"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/ts-any-check.sh",
+            "timeout": 10,
+            "statusMessage": "Checking for any types..."
+          }
+        ],
+        "matcher": "Write"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/ts-ignore-check.sh",
+            "timeout": 5,
+            "statusMessage": "Checking for @ts-ignore..."
+          }
+        ],
+        "matcher": "Write"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/ts-catch-unknown.sh",
+            "timeout": 5,
+            "statusMessage": "Checking catch block types..."
+          }
+        ],
+        "matcher": "Write"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/ts-enum-check.sh",
+            "timeout": 5,
+            "statusMessage": "Checking for enum declarations..."
+          }
+        ],
+        "matcher": "Write"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/react-effect-cleanup.sh",
+            "timeout": 5,
+            "statusMessage": "Checking useEffect cleanup..."
+          }
+        ],
+        "matcher": "Write"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/react-a11y-click.sh",
+            "timeout": 5,
+            "statusMessage": "Checking accessibility..."
+          }
+        ],
+        "matcher": "Write"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/react-effect-chains.sh",
+            "timeout": 5,
+            "statusMessage": "Checking effect chains..."
+          }
+        ],
+        "matcher": "Write"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE_PATH=$(jq -r '.tool_input.file_path // empty' 2>/dev/null); [ -n \"$FILE_PATH\" ] && node -e \"\nconst f = process.argv[1] || '';\nif (!/page\\.(tsx|jsx)$/.test(f)) process.exit(0);\nconst c = require('fs').readFileSync(f, 'utf8');\nconst trimmed = c.trim();\nconst hasUseClient = /^['\"]use client['\"]/.test(trimmed);\nconst hasInteractivity = /useState|useEffect|useReducer|useRef|useCallback|useMemo|onClick|onChange|onSubmit|onKeyDown|addEventListener/.test(c);\nif (hasUseClient && !hasInteractivity) {\n  console.log('Warning: page.tsx has use client but no client interactivity detected. Consider making it a Server Component for better performance.');\n}\nif (!hasUseClient && /export (default )?(async )?function/.test(c) && !/export (const )?metadata|generateMetadata/.test(c)) {\n  console.log('Warning: page.tsx has no metadata export. Add metadata or generateMetadata for SEO.');\n}\n\" -- \"$FILE_PATH\"",
+            "timeout": 5
+          }
+        ],
+        "matcher": "Write"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE_PATH=$(jq -r '.tool_input.file_path // empty' 2>/dev/null); [ -n \"$FILE_PATH\" ] && node -e \"\nconst f = process.argv[1] || '';\nif (!/\\.(tsx|jsx)$/.test(f)) process.exit(0);\nconst c = require('fs').readFileSync(f, 'utf8');\nif (/<img\\s/.test(c) && !/next\\/image/.test(c)) {\n  console.log('Warning: Raw <img> tag detected. Use next/image for automatic optimization, lazy loading, and responsive sizing.');\n}\nif (/<a\\s+href=/.test(c) && /href=[\"\\x27]\\//.test(c) && !/next\\/link/.test(c)) {\n  console.log('Warning: Raw <a> tag with internal href detected. Use next/link for client-side navigation and prefetching.');\n}\n\" -- \"$FILE_PATH\"",
+            "timeout": 5
+          }
+        ],
+        "matcher": "Write"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE_PATH=$(jq -r '.tool_input.file_path // empty' 2>/dev/null); [ -n \"$FILE_PATH\" ] && node -e \"\nconst f = process.argv[1] || '';\nif (!/actions?\\.ts$/.test(f)) process.exit(0);\nconst c = require('fs').readFileSync(f, 'utf8');\nif (/['\"]use server['\"]/.test(c)) {\n  const fnBodies = c.split(/exports+(asyncs+)?function/).slice(1);\n  for (const body of fnBodies) {\n    if (!/z\\.|zod|valibot|schema|parse|safeParse|validate/.test(body.slice(0, 500))) {\n      console.log('Warning: Server Action detected without apparent input validation. Always validate inputs with Zod or similar.');\n      break;\n    }\n  }\n}\n\" -- \"$FILE_PATH\"",
+            "timeout": 5
+          }
+        ],
+        "matcher": "Write"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE_PATH=$(jq -r '.tool_input.file_path // empty') && [ -n \"$FILE_PATH\" ] && echo \"$FILE_PATH\" | grep -qE \"\\.(spec|test)\\.(ts|tsx|js|jsx)$\" && grep -cE \"\\bpage\\.waitForTimeout\\(\" \"$FILE_PATH\" | grep -v \"^0$\" > /dev/null 2>&1 && { echo \"Anti-pattern: page.waitForTimeout() detected — use web-first assertions or event-based waits instead (see https://playwright.dev/docs/best-practices)\" >&2; exit 2; } || exit 0",
+            "timeout": 10,
+            "statusMessage": "Checking for page.waitForTimeout() anti-pattern"
+          }
+        ],
+        "matcher": "Write"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE_PATH=$(jq -r '.tool_input.file_path // empty') && [ -n \"$FILE_PATH\" ] && echo \"$FILE_PATH\" | grep -qE \"\\.(spec|test)\\.(ts|tsx|js|jsx)$\" && grep -cE \"\\b(test\\.only|describe\\.only)\\b\" \"$FILE_PATH\" | grep -v \"^0$\" > /dev/null 2>&1 && { echo \"Focused test detected (.only) — remove before committing to avoid skipping other tests\" >&2; exit 2; } || exit 0",
+            "timeout": 10,
+            "statusMessage": "Checking for .only in Playwright specs"
+          }
+        ],
+        "matcher": "Write"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE_PATH=$(jq -r '.tool_input.file_path // empty') && [ -n \"$FILE_PATH\" ] && echo \"$FILE_PATH\" | grep -qE \"\\.(spec|test)\\.(ts|tsx|js|jsx)$\" && grep -nE \"expect\\(await .+\\.(isVisible|isEnabled|isDisabled|isChecked|isHidden|isEditable|textContent|inputValue|getAttribute|innerText)\\(\" \"$FILE_PATH\" | head -1 | grep -q \".\" && { echo \"Warning: manual state extraction detected — use web-first assertions like expect(locator).toBeVisible() instead of expect(await locator.isVisible()).toBe(true)\" >&2; exit 2; } || exit 0",
+            "timeout": 10,
+            "statusMessage": "Checking for manual state extraction in Playwright specs"
+          }
+        ],
+        "matcher": "Write"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE_PATH=$(jq -r '.tool_input.file_path // empty'); [ -n \"$FILE_PATH\" ] && node -e \"const f=process.argv[1]||'';if(!/Dockerfile/.test(f))process.exit(0);const c=require('fs').readFileSync(f,'utf8');const lines=c.split('\\n');const issues=[];for(const l of lines){if(/^FROM\\s+/.test(l)){const img=(l.split(/\\s+/)[1]||'');if(/:latest/.test(img))issues.push('CRITICAL: Uses :latest tag: '+l.trim());else if(!/:/.test(img)&&!/^scratch$/.test(img)&&!/\\$/.test(img))issues.push('WARNING: Untagged base image: '+l.trim())}}if(!/^USER\\s+/m.test(c)&&!/FROM\\s+scratch/m.test(c))issues.push('WARNING: No USER directive — container will run as root');if(!/HEALTHCHECK/m.test(c)&&!/FROM\\s+scratch/m.test(c))issues.push('INFO: No HEALTHCHECK defined — consider adding one for production');if(/^(ENV|ARG)\\s+.*(PASSWORD|SECRET|TOKEN|API_KEY|PRIVATE_KEY)/mi.test(c))issues.push('CRITICAL: Potential secret in ENV/ARG — use BuildKit secrets instead');if(/^ADD\\s+(?!https?:)[^*]*\\s/m.test(c)&&!/\\.tar/.test(c))issues.push('INFO: ADD used for local file — prefer COPY unless extracting an archive');issues.forEach(i=>console.log(i))\" -- \"$FILE_PATH\"",
+            "timeout": 5
+          }
+        ],
+        "matcher": "Write"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE_PATH=$(jq -r '.tool_input.file_path // empty'); [ -n \"$FILE_PATH\" ] && node -e \"const f=process.argv[1]||'';if(!/compose.*\\.ya?ml$/.test(f))process.exit(0);const c=require('fs').readFileSync(f,'utf8');const issues=[];if(/privileged:\\s*true/.test(c))issues.push('CRITICAL: privileged: true found — almost never needed, provides full host access');if(/network_mode:\\s*[\"\\x27]?host/.test(c))issues.push('WARNING: network_mode: host breaks container network isolation');if(/(PASSWORD|SECRET|TOKEN|API_KEY)\\s*[:=]\\s*[\"\\x27]?[a-zA-Z0-9]/.test(c)&&!/\\$\\{/.test(c))issues.push('WARNING: Possible hardcoded secret — use env_file or Docker secrets');if(/ports:/.test(c)&&/(5432|3306|6379|27017):[0-9]/.test(c))issues.push('INFO: Database/cache port exposed to host — consider using internal networks only');issues.forEach(i=>console.log(i))\" -- \"$FILE_PATH\"",
+            "timeout": 5
+          }
+        ],
+        "matcher": "Write"
+      }
+    ]
+  }
+}

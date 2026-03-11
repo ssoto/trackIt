@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
-import { Task, DailySummary } from '@/lib/types';
+import type { Task, DailySummary } from '@/lib/types';
 import { formatDate, getWeekDates } from '@/lib/timeUtils';
 
 // GET /api/summary - Get daily summaries for a week

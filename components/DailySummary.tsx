@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Task, DailySummary, TaskStatus } from '@/lib/types';
+import type { Task, DailySummary, TaskStatus } from '@/lib/types';
 import { formatMinutes, getDayName, getMonthDay } from '@/lib/timeUtils';
 import { showToast, dismissToast } from '@/components/Toast';
 import TimePicker from '@/components/TimePicker';
@@ -47,7 +47,7 @@ function toDateStr(isoString: string) {
 
 // Combine a YYYY-MM-DD date and HH:MM hour into an ISO string
 function toISO(dateStr: string, hourStr: string) {
-    const [h, m] = hourStr.split(':').map(Number);
+    const [h = 0, m = 0] = hourStr.split(':').map(Number);
     const d = new Date(dateStr);
     d.setHours(h, m, 0, 0);
     return d.toISOString();

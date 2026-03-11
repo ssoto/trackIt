@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
-import { Task } from '@/lib/types';
+import type { Task } from '@/lib/types';
 
 // GET /api/tasks - Fetch tasks for a date range
 export async function GET(request: NextRequest) {
