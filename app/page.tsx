@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import TaskTimer from '@/components/TaskTimer';
 import WeeklyCalendar from '@/components/WeeklyCalendar';
 import DailySummary from '@/components/DailySummary';
-import { DailySummary as DailySummaryType } from '@/lib/types';
+import type { DailySummary as DailySummaryType } from '@/lib/types';
 import { formatDate, getWeekStart } from '@/lib/timeUtils';
 
 export default function Home() {

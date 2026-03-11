@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
-import { Task } from '@/lib/types';
+import type { Task } from '@/lib/types';
 
 // GET /api/tasks/active - Get the currently running task
 export async function GET() {

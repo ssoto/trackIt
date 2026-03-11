@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
-import { Task } from '@/lib/types';
+import type { Task } from '@/lib/types';
 
 // POST /api/tasks/create - Create a new task with custom times
 export async function POST(request: NextRequest) {

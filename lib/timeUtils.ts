@@ -38,7 +38,7 @@ export function getWeekDates(date: Date): Date[] {
  * Format a date as YYYY-MM-DD
  */
 export function formatDate(date: Date): string {
-    return date.toISOString().split('T')[0];
+    return date.toISOString().split('T')[0] ?? '';
 }
 
 /**

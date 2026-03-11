@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Task } from '@/lib/types';
+import type { Task } from '@/lib/types';
 import { formatDuration } from '@/lib/timeUtils';
 
 interface TaskTimerProps {

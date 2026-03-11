@@ -15,7 +15,7 @@ export function getDb(): Database.Database {
 
         // Split on the migration comment so we can handle ALTER TABLE separately
         const [createPart, ...migrationParts] = schema.split('-- Migration:');
-        db.exec(createPart);
+        db.exec(createPart ?? '');
 
         // Run each migration statement individually, ignoring "duplicate column" errors
         for (const part of migrationParts) {
