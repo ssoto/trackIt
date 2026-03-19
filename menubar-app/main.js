@@ -1,6 +1,6 @@
 'use strict'
 
-const { app, BrowserWindow, Tray, nativeImage, ipcMain, screen } = require('electron')
+const { app, BrowserWindow, Tray, nativeImage, ipcMain, screen, shell } = require('electron')
 const path = require('path')
 
 let tray = null
@@ -17,8 +17,8 @@ function createTrayIcon(isActive = false) {
   const cx = size / 2
   const cy = size / 2
   const outerR = 9
-  const innerR = 5.5
-  const dotR = 1.5
+  const innerR = 7.5
+  const dotR = 1.0
 
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
@@ -30,8 +30,8 @@ function createTrayIcon(isActive = false) {
       // Draw clock ring (outer circle minus inner)
       const inRing = dist <= outerR && dist >= innerR - 0.5
       // Draw clock hands (simple cross)
-      const inHandV = Math.abs(dx) <= 0.8 && dy <= 0 && dy >= -(outerR - 2)
-      const inHandH = Math.abs(dy) <= 0.8 && dx >= 0 && dx <= outerR - 4
+      const inHandV = Math.abs(dx) <= 0.5 && dy <= 0 && dy >= -(outerR - 2)
+      const inHandH = Math.abs(dy) <= 0.5 && dx >= 0 && dx <= outerR - 4
       // Center dot
       const inDot = dist <= dotR
 
@@ -45,7 +45,9 @@ function createTrayIcon(isActive = false) {
   }
 
   const icon = nativeImage.createFromBuffer(data, { width: size, height: size })
-  return icon.resize({ width: size, height: size })
+  const resized = icon.resize({ width: size, height: size })
+  resized.setTemplateImage(true)
+  return resized
 }
 
 // --- Popup window ---
@@ -75,6 +77,18 @@ function createPopupWindow() {
   popupWindow.on('blur', () => {
     if (popupWindow && !popupWindow.isDestroyed()) {
       popupWindow.hide()
+    }
+  })
+
+  popupWindow.on('show', () => {
+    if (popupWindow && !popupWindow.isDestroyed()) {
+      popupWindow.webContents.send('popup-visible')
+    }
+  })
+
+  popupWindow.on('hide', () => {
+    if (popupWindow && !popupWindow.isDestroyed()) {
+      popupWindow.webContents.send('popup-hidden')
     }
   })
 }
@@ -131,6 +145,14 @@ ipcMain.handle('set-tray-title', (_event, title) => {
   if (tray && !tray.isDestroyed()) {
     tray.setTitle(title ? ` ${title}` : '')
   }
+})
+
+ipcMain.on('quit-app', () => {
+  app.quit()
+})
+
+ipcMain.on('open-web', () => {
+  shell.openExternal('http://localhost:3000')
 })
 
 // --- App lifecycle ---

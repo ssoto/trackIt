@@ -19,6 +19,8 @@ const formError       = document.getElementById('formError')
 const recentList      = document.getElementById('recentList')
 const offlineOverlay  = document.getElementById('offlineOverlay')
 const retryBtn        = document.getElementById('retryBtn')
+const quitBtn         = document.getElementById('quitBtn')
+const openWebBtn      = document.getElementById('openWebBtn')
 
 // ---- Time helpers ----
 
@@ -177,7 +179,7 @@ async function poll() {
 
 function startPolling() {
   if (pollInterval) return
-  pollInterval = setInterval(poll, 1000)
+  pollInterval = setInterval(poll, 5000)
 }
 
 function stopPolling() {
@@ -258,6 +260,14 @@ stopBtn.addEventListener('click', async () => {
   fetchRecentTasks().then(renderRecentTasks)
 })
 
+openWebBtn.addEventListener('click', () => {
+  window.trackIt.openWeb()
+})
+
+quitBtn.addEventListener('click', () => {
+  window.trackIt.quit()
+})
+
 retryBtn.addEventListener('click', async () => {
   stopPolling()
   const { online, task } = await fetchActiveTask()
@@ -285,5 +295,17 @@ async function initialLoad() {
   renderRecentTasks(tasks)
   startPolling()
 }
+
+// ---- Visibility-aware polling ----
+
+window.trackIt.onPopupVisible(() => {
+  // Poll immediately so state is fresh when the popup opens, then resume interval
+  poll()
+  startPolling()
+})
+
+window.trackIt.onPopupHidden(() => {
+  stopPolling()
+})
 
 initialLoad()

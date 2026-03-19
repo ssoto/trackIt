@@ -10,4 +10,14 @@ contextBridge.exposeInMainWorld('trackIt', {
   // Update the tray icon title (elapsed time or empty)
   setTrayTitle: (title) =>
     ipcRenderer.invoke('set-tray-title', title),
+
+  // Subscribe to popup visibility events from the main process
+  onPopupVisible: (cb) => ipcRenderer.on('popup-visible', cb),
+  onPopupHidden: (cb) => ipcRenderer.on('popup-hidden', cb),
+
+  // Quit the application
+  quit: () => ipcRenderer.send('quit-app'),
+
+  // Open TrackIt web app in browser
+  openWeb: () => ipcRenderer.send('open-web'),
 })

@@ -14,6 +14,63 @@ export default function TaskTimer({ onTaskUpdate }: TaskTimerProps) {
     const [elapsedTime, setElapsedTime] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [isCollapsed, setIsCollapsed] = useState(() => {
+        if (typeof window === 'undefined') return false;
+        return localStorage.getItem('taskTimerCollapsed') === 'true';
+    });
+    const [position, setPosition] = useState<{ x: number; y: number }>(() => {
+        if (typeof window === 'undefined') return { x: 20, y: 16 };
+        const saved = localStorage.getItem('taskTimerPosition');
+        if (saved) {
+            try { return JSON.parse(saved) as { x: number; y: number }; } catch { /* ignore */ }
+        }
+        return { x: window.innerWidth - 120, y: 16 };
+    });
+    const isDraggingRef = useRef(false);
+    const hasDraggedRef = useRef(false);
+    const dragOffsetRef = useRef({ x: 0, y: 0 });
+    const buttonRef = useRef<HTMLButtonElement>(null);
+
+    const toggleCollapsed = () => {
+        setIsCollapsed((prev) => {
+            const next = !prev;
+            localStorage.setItem('taskTimerCollapsed', String(next));
+            return next;
+        });
+    };
+
+    const handleDragStart = (e: React.MouseEvent) => {
+        e.preventDefault();
+        isDraggingRef.current = true;
+        hasDraggedRef.current = false;
+        dragOffsetRef.current = { x: e.clientX - position.x, y: e.clientY - position.y };
+
+        let currentX = position.x;
+        let currentY = position.y;
+
+        const handleMouseMove = (moveEvent: MouseEvent) => {
+            const buttonWidth = buttonRef.current?.offsetWidth ?? 80;
+            const buttonHeight = buttonRef.current?.offsetHeight ?? 36;
+            currentX = Math.min(Math.max(0, moveEvent.clientX - dragOffsetRef.current.x), window.innerWidth - buttonWidth);
+            currentY = Math.min(Math.max(0, moveEvent.clientY - dragOffsetRef.current.y), window.innerHeight - buttonHeight);
+            hasDraggedRef.current = true;
+            setPosition({ x: currentX, y: currentY });
+        };
+
+        const handleMouseUp = () => {
+            isDraggingRef.current = false;
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+            if (hasDraggedRef.current) {
+                localStorage.setItem('taskTimerPosition', JSON.stringify({ x: currentX, y: currentY }));
+            } else {
+                toggleCollapsed();
+            }
+        };
+
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+    };
 
     // Fetch active task on mount
     useEffect(() => {
@@ -174,6 +231,37 @@ export default function TaskTimer({ onTaskUpdate }: TaskTimerProps) {
         }
     };
 
+    if (isCollapsed) {
+        return (
+            <button
+                ref={buttonRef}
+                onMouseDown={handleDragStart}
+                title="Drag to move · Click to expand"
+                style={{ left: position.x, top: position.y }}
+                className={`fixed z-50 cursor-grab active:cursor-grabbing flex items-center gap-2 px-3 py-2 rounded-full shadow-lg border backdrop-blur-lg select-none transition-shadow ${
+                    activeTask
+                        ? 'bg-white/95 dark:bg-gray-900/95 border-primary-400 dark:border-primary-500 text-primary-600 dark:text-primary-400 ring-2 ring-primary-200 dark:ring-primary-900'
+                        : 'bg-white/95 dark:bg-gray-900/95 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400'
+                }`}
+            >
+                <div className="relative">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    {activeTask && (
+                        <span className="absolute -top-0.5 -right-0.5 flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-primary-500"></span>
+                        </span>
+                    )}
+                </div>
+                {activeTask && (
+                    <span className="text-sm font-mono font-bold">{formatDuration(elapsedTime)}</span>
+                )}
+            </button>
+        );
+    }
+
     return (
         <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 p-4 min-w-[280px] max-w-[320px] animate-slide-up">
             {/* Clock Icon & Timer Display */}
@@ -216,6 +304,17 @@ export default function TaskTimer({ onTaskUpdate }: TaskTimerProps) {
                         </div>
                     )}
                 </div>
+
+                {/* Collapse button */}
+                <button
+                    onClick={toggleCollapsed}
+                    title="Minimize timer"
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
             </div>
 
             {/* Task Description or Input */}

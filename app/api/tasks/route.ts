@@ -124,6 +124,12 @@ export async function PATCH(request: NextRequest) {
         if (end_time !== undefined) {
             updates.push('end_time = ?');
             values.push(end_time);
+
+            if (duration === undefined) {
+                const calculatedDuration = new Date(end_time).getTime() - new Date(task.start_time).getTime();
+                updates.push('duration = ?');
+                values.push(calculatedDuration);
+            }
         }
 
         if (duration !== undefined) {

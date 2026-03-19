@@ -51,3 +51,5 @@ next-env.d.ts
 # test output
 test-results/
 playwright-report/
+opencode.local.config.ts
+.opencode/local-plugins/
