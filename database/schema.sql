@@ -13,5 +13,14 @@ CREATE TABLE IF NOT EXISTS tasks (
 CREATE INDEX IF NOT EXISTS idx_tasks_start_time ON tasks(start_time);
 CREATE INDEX IF NOT EXISTS idx_tasks_end_time ON tasks(end_time);
 
+-- Profiles table
+CREATE TABLE IF NOT EXISTS profiles (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  name       TEXT    NOT NULL UNIQUE,
+  created_at TEXT    NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_profiles_name ON profiles(name);
+
 -- Migration: add status column if it doesn't exist yet (idempotent)
 ALTER TABLE tasks ADD COLUMN status TEXT NOT NULL DEFAULT 'done';

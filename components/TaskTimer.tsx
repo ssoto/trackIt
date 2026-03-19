@@ -6,26 +6,28 @@ import { formatDuration } from '@/lib/timeUtils';
 
 interface TaskTimerProps {
     onTaskUpdate: () => void;
+    profileId: number | null;
 }
 
-export default function TaskTimer({ onTaskUpdate }: TaskTimerProps) {
+export default function TaskTimer({ onTaskUpdate, profileId }: TaskTimerProps) {
     const [description, setDescription] = useState('');
     const [activeTask, setActiveTask] = useState<Task | null>(null);
     const [elapsedTime, setElapsedTime] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [isCollapsed, setIsCollapsed] = useState(() => {
-        if (typeof window === 'undefined') return false;
-        return localStorage.getItem('taskTimerCollapsed') === 'true';
-    });
-    const [position, setPosition] = useState<{ x: number; y: number }>(() => {
-        if (typeof window === 'undefined') return { x: 20, y: 16 };
+    const [isCollapsed, setIsCollapsed] = useState(false);
+    const [position, setPosition] = useState<{ x: number; y: number }>({ x: 20, y: 16 });
+
+    // Read persisted state from localStorage after mount (avoids SSR/jsdom issues)
+    useEffect(() => {
+        setIsCollapsed(localStorage.getItem('taskTimerCollapsed') === 'true');
         const saved = localStorage.getItem('taskTimerPosition');
         if (saved) {
-            try { return JSON.parse(saved) as { x: number; y: number }; } catch { /* ignore */ }
+            try { setPosition(JSON.parse(saved) as { x: number; y: number }); } catch { /* ignore */ }
+        } else {
+            setPosition({ x: window.innerWidth - 120, y: 16 });
         }
-        return { x: window.innerWidth - 120, y: 16 };
-    });
+    }, []);
     const isDraggingRef = useRef(false);
     const hasDraggedRef = useRef(false);
     const dragOffsetRef = useRef({ x: 0, y: 0 });
@@ -74,8 +76,9 @@ export default function TaskTimer({ onTaskUpdate }: TaskTimerProps) {
 
     // Fetch active task on mount
     useEffect(() => {
+        if (profileId === null) return;
         fetchActiveTask();
-    }, []);
+    }, [profileId]);
 
     // Update elapsed time every second when there's an active task
     useEffect(() => {
@@ -155,8 +158,9 @@ export default function TaskTimer({ onTaskUpdate }: TaskTimerProps) {
     }, [activeTask, elapsedTime]);
 
     const fetchActiveTask = async () => {
+        if (profileId === null) return;
         try {
-            const response = await fetch('/api/tasks/active');
+            const response = await fetch(`/api/tasks/active?profileId=${profileId}`);
             const data = await response.json();
             setActiveTask(data.task);
         } catch (err) {
@@ -170,6 +174,11 @@ export default function TaskTimer({ onTaskUpdate }: TaskTimerProps) {
             return;
         }
 
+        if (profileId === null) {
+            setError('No profile selected');
+            return;
+        }
+
         setIsLoading(true);
         setError(null);
 
@@ -177,7 +186,7 @@ export default function TaskTimer({ onTaskUpdate }: TaskTimerProps) {
             const response = await fetch('/api/tasks', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ description, status: 'in_progress' }),
+                body: JSON.stringify({ description, status: 'in_progress', profile_id: profileId }),
             });
 
             const data = await response.json();

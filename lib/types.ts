@@ -1,5 +1,11 @@
 export type TaskStatus = 'todo' | 'in_progress' | 'done';
 
+export interface Profile {
+    id: number;
+    name: string;
+    created_at: string;
+}
+
 export interface Task {
     id: number;
     description: string;
@@ -8,6 +14,7 @@ export interface Task {
     duration: number | null;
     status: TaskStatus;
     created_at: string;
+    profile_id: number;
 }
 
 export interface DailySummary {

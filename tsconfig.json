@@ -46,6 +46,8 @@
   "exclude": [
     "node_modules",
     "components/**/*.steps.tsx",
-    "tests/**"
+    "tests/**",
+    "opencode.config.ts",
+    "opencode.local.config.ts"
   ]
 }

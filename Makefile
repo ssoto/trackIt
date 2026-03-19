@@ -59,12 +59,14 @@ clean:
 # Run tests
 test:
 	@echo "Running tests..."
-	npm test
+	npm run test:unit
+	npm run test:e2e
 
 # Run linter
 lint:
 	@echo "Running linter..."
-	npm run lint
+	npx tsc --noEmit
+	@echo "✓ Type check complete"
 
 # Format code
 format:

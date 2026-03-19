@@ -20,6 +20,9 @@ async function stopRunningTimer(page: Page) {
 
 test.describe('TaskTimer widget', () => {
     test.beforeEach(async ({ page }) => {
+        await page.addInitScript(() => {
+            localStorage.setItem('trackit:activeProfileId', '1');
+        });
         await page.goto('/');
         await stopRunningTimer(page);
     });

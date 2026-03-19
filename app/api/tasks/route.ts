@@ -2,12 +2,22 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import type { Task } from '@/lib/types';
 
-// GET /api/tasks - Fetch tasks for a date range
+// GET /api/tasks - Fetch tasks for a date range (profile-scoped)
 export async function GET(request: NextRequest) {
     try {
         const searchParams = request.nextUrl.searchParams;
         const startDate = searchParams.get('startDate');
         const endDate = searchParams.get('endDate');
+        const profileIdParam = searchParams.get('profileId');
+
+        if (!profileIdParam) {
+            return NextResponse.json({ error: 'profileId is required' }, { status: 400 });
+        }
+
+        const profileId = parseInt(profileIdParam, 10);
+        if (isNaN(profileId)) {
+            return NextResponse.json({ error: 'Invalid profileId' }, { status: 400 });
+        }
 
         const db = getDb();
 
@@ -17,12 +27,13 @@ export async function GET(request: NextRequest) {
             const stmt = db.prepare(`
         SELECT * FROM tasks 
         WHERE date(start_time) >= date(?) AND date(start_time) <= date(?)
+          AND profile_id = ?
         ORDER BY start_time DESC
       `);
-            tasks = stmt.all(startDate, endDate) as Task[];
+            tasks = stmt.all(startDate, endDate, profileId) as Task[];
         } else {
-            const stmt = db.prepare('SELECT * FROM tasks ORDER BY start_time DESC LIMIT 100');
-            tasks = stmt.all() as Task[];
+            const stmt = db.prepare('SELECT * FROM tasks WHERE profile_id = ? ORDER BY start_time DESC LIMIT 100');
+            tasks = stmt.all(profileId) as Task[];
         }
 
         return NextResponse.json({ tasks });
@@ -35,11 +46,11 @@ export async function GET(request: NextRequest) {
     }
 }
 
-// POST /api/tasks - Create a new task (start timer)
+// POST /api/tasks - Create a new task (start timer), profile-scoped
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { description, status = 'in_progress' } = body;
+        const { description, status = 'in_progress', profile_id } = body;
 
         if (!description || description.trim() === '') {
             return NextResponse.json(
@@ -48,11 +59,18 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        if (!profile_id) {
+            return NextResponse.json(
+                { error: 'profile_id is required' },
+                { status: 400 }
+            );
+        }
+
         const db = getDb();
 
-        // Check if there's already an active task
-        const activeStmt = db.prepare('SELECT * FROM tasks WHERE end_time IS NULL');
-        const activeTask = activeStmt.get() as Task | undefined;
+        // Check if there's already an active task for this profile
+        const activeStmt = db.prepare('SELECT * FROM tasks WHERE end_time IS NULL AND profile_id = ?');
+        const activeTask = activeStmt.get(profile_id) as Task | undefined;
 
         if (activeTask) {
             return NextResponse.json(
@@ -64,11 +82,11 @@ export async function POST(request: NextRequest) {
         const startTime = new Date().toISOString();
 
         const stmt = db.prepare(`
-      INSERT INTO tasks (description, start_time, status)
-      VALUES (?, ?, ?)
+      INSERT INTO tasks (description, start_time, status, profile_id)
+      VALUES (?, ?, ?, ?)
     `);
 
-        const result = stmt.run(description.trim(), startTime, status);
+        const result = stmt.run(description.trim(), startTime, status, profile_id);
 
         const newTask = db.prepare('SELECT * FROM tasks WHERE id = ?').get(result.lastInsertRowid) as Task;
 
@@ -109,7 +127,7 @@ export async function PATCH(request: NextRequest) {
 
         // Build update query dynamically based on provided fields
         const updates: string[] = [];
-        const values: any[] = [];
+        const values: unknown[] = [];
 
         if (description !== undefined) {
             updates.push('description = ?');

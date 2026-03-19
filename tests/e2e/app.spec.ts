@@ -1,6 +1,12 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('App shell', () => {
+    test.beforeEach(async ({ page }) => {
+        await page.addInitScript(() => {
+            localStorage.setItem('trackit:activeProfileId', '1');
+        });
+    });
+
     test('loads and shows the TrackIt header', async ({ page }) => {
         await page.goto('/');
         await expect(page.getByRole('heading', { name: 'TrackIt' })).toBeVisible();
@@ -29,6 +35,12 @@ test.describe('App shell', () => {
 });
 
 test.describe('Weekends toggle', () => {
+    test.beforeEach(async ({ page }) => {
+        await page.addInitScript(() => {
+            localStorage.setItem('trackit:activeProfileId', '1');
+        });
+    });
+
     test('shows Hide Weekends button after mount', async ({ page }) => {
         await page.goto('/');
         const btn = page.getByRole('button', { name: /hide weekends|show weekends/i });

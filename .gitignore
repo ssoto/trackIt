@@ -53,3 +53,4 @@ test-results/
 playwright-report/
 opencode.local.config.ts
 .opencode/local-plugins/
+.opencode/history/
