@@ -6,7 +6,7 @@ import type { Task } from '@/lib/types';
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { description, start_time, end_time, duration } = body;
+        const { description, start_time, end_time, duration, profile_id } = body;
 
         if (!description || description.trim() === '') {
             return NextResponse.json(
@@ -29,18 +29,26 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        if (!profile_id) {
+            return NextResponse.json(
+                { error: 'profile_id is required' },
+                { status: 400 }
+            );
+        }
+
         const db = getDb();
 
         const stmt = db.prepare(`
-      INSERT INTO tasks (description, start_time, end_time, duration)
-      VALUES (?, ?, ?, ?)
+      INSERT INTO tasks (description, start_time, end_time, duration, profile_id)
+      VALUES (?, ?, ?, ?, ?)
     `);
 
         const result = stmt.run(
             description.trim(),
             start_time,
             end_time,
-            duration
+            duration,
+            profile_id
         );
 
         const newTask = db.prepare('SELECT * FROM tasks WHERE id = ?').get(result.lastInsertRowid) as Task;

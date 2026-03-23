@@ -4,8 +4,10 @@ import { useState, useEffect } from 'react';
 import TaskTimer from '@/components/TaskTimer';
 import WeeklyCalendar from '@/components/WeeklyCalendar';
 import DailySummary from '@/components/DailySummary';
-import type { DailySummary as DailySummaryType } from '@/lib/types';
+import ProfileSelector from '@/components/ProfileSelector';
+import type { DailySummary as DailySummaryType, Profile } from '@/lib/types';
 import { formatDate, getWeekStart } from '@/lib/timeUtils';
+import { getActiveProfileId } from '@/lib/profileUtils';
 
 export default function Home() {
     const [currentWeek, setCurrentWeek] = useState(new Date());
@@ -16,12 +18,17 @@ export default function Home() {
     // Start with true (matches SSR), then read localStorage after mount to avoid hydration mismatch
     const [showWeekends, setShowWeekends] = useState(true);
     const [mounted, setMounted] = useState(false);
+    const [activeProfileId, setActiveProfileIdState] = useState<number | null>(null);
+    const [profileMounted, setProfileMounted] = useState(false);
 
     useEffect(() => {
         const saved = localStorage.getItem('trackit-show-weekends');
         if (saved !== null) {
             setShowWeekends(saved === 'true');
         }
+        const savedProfileId = getActiveProfileId();
+        if (savedProfileId !== null) setActiveProfileIdState(savedProfileId);
+        setProfileMounted(true);
         setMounted(true); // mark as ready after reading localStorage
     }, []);
 
@@ -31,17 +38,20 @@ export default function Home() {
     }, [showWeekends, mounted]);
 
     useEffect(() => {
+        if (activeProfileId === null) return;
         fetchSummaries();
-    }, [currentWeek]);
+    }, [currentWeek, activeProfileId]);
 
     const fetchSummaries = async (isBackground = false) => {
+        if (activeProfileId === null) return;
         if (!isBackground) setIsLoading(true);
         try {
             const weekStart = getWeekStart(currentWeek);
             // Add timestamp to foil caching
-            const response = await fetch(`/api/summary?weekStart=${formatDate(weekStart)}&t=${Date.now()}`, {
-                cache: 'no-store'
-            });
+            const response = await fetch(
+                `/api/summary?weekStart=${formatDate(weekStart)}&profileId=${activeProfileId}&t=${Date.now()}`,
+                { cache: 'no-store' }
+            );
             const data = await response.json();
 
             setSummaries(data.summaries || []);
@@ -64,16 +74,16 @@ export default function Home() {
     };
 
     // Optimistic update helpers — mutate local state immediately, sync API in background
-    const updateSummariesLocally = (taskId: number, updates: Record<string, any>) => {
+    const updateSummariesLocally = (taskId: number, updates: Record<string, unknown>) => {
         setSummaries(prev => {
             // Find original task
-            let originalTask: any = null;
+            let originalTask: Record<string, unknown> | null = null;
             let originalDateStr = '';
 
             for (const day of prev) {
                 const found = day.tasks.find(t => t.id === taskId);
                 if (found) {
-                    originalTask = found;
+                    originalTask = found as unknown as Record<string, unknown>;
                     originalDateStr = day.date; // Use the summary date as source of truth
                     break;
                 }
@@ -86,7 +96,7 @@ export default function Home() {
             // Determine new date string (YYYY-MM-DD) from start_time
             // We assume start_time is ISO string. We need local YYYY-MM-DD.
             // A safe way is to create a Date and use the same formatting logic as the backend/rest of app
-            const d = new Date(updatedTask.start_time);
+            const d = new Date(updatedTask.start_time as string);
             const pad = (n: number) => String(n).padStart(2, '0');
             const newDateStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 
@@ -107,7 +117,7 @@ export default function Home() {
 
                 if (isTarget) {
                     // Add updated to target
-                    tasks.push(updatedTask);
+                    tasks.push(updatedTask as unknown as DailySummaryType['tasks'][number]);
                     // Sort by start_time ascending
                     tasks.sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
                 }
@@ -150,7 +160,7 @@ export default function Home() {
         }
     };
 
-    const handleUpdateTask = async (taskId: number, updates: any) => {
+    const handleUpdateTask = async (taskId: number, updates: Record<string, unknown>) => {
         // Optimistic: apply update to local state immediately
         updateSummariesLocally(taskId, updates);
 
@@ -167,13 +177,13 @@ export default function Home() {
         }
     };
 
-    const handleCreateTask = async (task: any) => {
+    const handleCreateTask = async (task: Record<string, unknown>) => {
         // For create we still need the server-assigned ID, so fetch after
         try {
             const response = await fetch('/api/tasks/create', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(task),
+                body: JSON.stringify({ ...task, profile_id: activeProfileId }),
             });
             if (response.ok) {
                 await fetchSummaries(true);
@@ -203,9 +213,19 @@ export default function Home() {
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <header className="mb-8 text-center animate-fade-in">
-                    <h1 className="text-5xl font-bold mb-3 bg-gradient-to-r from-primary-600 via-accent-600 to-primary-600 bg-clip-text text-transparent">
-                        TrackIt
-                    </h1>
+                    <div className="flex items-center justify-center gap-4 mb-3">
+                        <h1 className="text-5xl font-bold bg-gradient-to-r from-primary-600 via-accent-600 to-primary-600 bg-clip-text text-transparent">
+                            TrackIt
+                        </h1>
+                        {profileMounted && (
+                            <ProfileSelector
+                                activeProfileId={activeProfileId}
+                                onProfileSelected={(profile: Profile) => {
+                                    setActiveProfileIdState(profile.id);
+                                }}
+                            />
+                        )}
+                    </div>
                     <p className="text-gray-600 dark:text-gray-400 text-lg">
                         Simple time tracking for your daily tasks
                     </p>
@@ -237,37 +257,39 @@ export default function Home() {
 
                 {/* Floating Task Timer - Top Right */}
                 <div className="fixed top-4 right-4 z-50">
-                    <TaskTimer onTaskUpdate={handleTaskUpdate} />
+                    <TaskTimer onTaskUpdate={handleTaskUpdate} profileId={activeProfileId} />
                 </div>
 
                 {/* Main Content - Full Width */}
-                <div className="space-y-6">
-                    <WeeklyCalendar
-                        currentWeek={currentWeek}
-                        onWeekChange={setCurrentWeek}
-                        dailyTotals={dailyTotals}
-                        showWeekends={mounted ? showWeekends : true}
-                        selectedDate={selectedDate}
-                        onDaySelect={setSelectedDate}
-                    />
-
-                    {isLoading ? (
-                        <div className="card">
-                            <div className="flex items-center justify-center py-12">
-                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
-                            </div>
-                        </div>
-                    ) : (
-                        <DailySummary
-                            summaries={filteredSummaries}
-                            onDeleteTask={handleDeleteTask}
-                            onUpdateTask={handleUpdateTask}
-                            onCreateTask={handleCreateTask}
+                {activeProfileId !== null && (
+                    <div className="space-y-6">
+                        <WeeklyCalendar
+                            currentWeek={currentWeek}
+                            onWeekChange={setCurrentWeek}
+                            dailyTotals={dailyTotals}
+                            showWeekends={mounted ? showWeekends : true}
                             selectedDate={selectedDate}
                             onDaySelect={setSelectedDate}
                         />
-                    )}
-                </div>
+
+                        {isLoading ? (
+                            <div className="card">
+                                <div className="flex items-center justify-center py-12">
+                                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+                                </div>
+                            </div>
+                        ) : (
+                            <DailySummary
+                                summaries={filteredSummaries}
+                                onDeleteTask={handleDeleteTask}
+                                onUpdateTask={handleUpdateTask}
+                                onCreateTask={handleCreateTask}
+                                selectedDate={selectedDate}
+                                onDaySelect={setSelectedDate}
+                            />
+                        )}
+                    </div>
+                )}
 
                 {/* Footer */}
                 <footer className="mt-12 text-center text-sm text-gray-500 dark:text-gray-600">

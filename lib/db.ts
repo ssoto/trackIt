@@ -26,6 +26,23 @@ export function getDb(): Database.Database {
                 if (!e.message?.includes('duplicate column')) throw e;
             }
         }
+
+        // Migration: add profile_id column to tasks (idempotent)
+        try {
+            db.exec('ALTER TABLE tasks ADD COLUMN profile_id INTEGER');
+        } catch (e: any) {
+            if (!e.message?.includes('duplicate column')) throw e;
+        }
+
+        // Migration: seed default profile and assign existing tasks (idempotent)
+        db.transaction(() => {
+            db!.exec(`INSERT OR IGNORE INTO profiles (name) VALUES ('default')`);
+            db!.exec(`
+                UPDATE tasks
+                SET profile_id = (SELECT id FROM profiles WHERE name = 'default')
+                WHERE profile_id IS NULL
+            `);
+        })();
     }
 
     return db;

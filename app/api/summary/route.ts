@@ -3,11 +3,21 @@ import { getDb } from '@/lib/db';
 import type { Task, DailySummary } from '@/lib/types';
 import { formatDate, getWeekDates } from '@/lib/timeUtils';
 
-// GET /api/summary - Get daily summaries for a week
+// GET /api/summary - Get daily summaries for a week (profile-scoped)
 export async function GET(request: NextRequest) {
     try {
         const searchParams = request.nextUrl.searchParams;
         const weekStartParam = searchParams.get('weekStart');
+        const profileIdParam = searchParams.get('profileId');
+
+        if (!profileIdParam) {
+            return NextResponse.json({ error: 'profileId is required' }, { status: 400 });
+        }
+
+        const profileId = parseInt(profileIdParam, 10);
+        if (isNaN(profileId)) {
+            return NextResponse.json({ error: 'Invalid profileId' }, { status: 400 });
+        }
 
         const weekStart = weekStartParam ? new Date(weekStartParam) : new Date();
         const weekDates = getWeekDates(weekStart);
@@ -20,10 +30,11 @@ export async function GET(request: NextRequest) {
             const stmt = db.prepare(`
         SELECT * FROM tasks 
         WHERE date(start_time) = date(?)
+          AND profile_id = ?
         ORDER BY start_time ASC
       `);
 
-            const tasks = stmt.all(dateStr) as Task[];
+            const tasks = stmt.all(dateStr, profileId) as Task[];
 
             const totalMinutes = tasks.reduce((sum, task) => {
                 if (task.duration) {

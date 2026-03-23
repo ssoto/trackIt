@@ -14,6 +14,7 @@ const makeActiveTask = (description: string) => ({
     duration: null,
     status: 'in_progress' as const,
     created_at: new Date().toISOString(),
+    profile_id: 1,
 });
 
 describeFeature(feature, ({ Scenario }) => {
@@ -22,7 +23,7 @@ describeFeature(feature, ({ Scenario }) => {
         Given('the TaskTimer is rendered with no active task', async (_ctx) => {
             cleanup();
             global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ task: null }) });
-            await act(async () => { ({ container } = render(<TaskTimer onTaskUpdate={vi.fn()} />)); });
+            await act(async () => { ({ container } = render(<TaskTimer onTaskUpdate={vi.fn()} profileId={1} />)); });
         });
         Then('I should see the description input', (_ctx) => {
             expect(within(container).getByPlaceholderText('What are you working on?')).toBeInTheDocument();
@@ -37,7 +38,7 @@ describeFeature(feature, ({ Scenario }) => {
         Given('the TaskTimer is rendered with no active task', async (_ctx) => {
             cleanup();
             global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ task: null }) });
-            await act(async () => { ({ container } = render(<TaskTimer onTaskUpdate={vi.fn()} />)); });
+            await act(async () => { ({ container } = render(<TaskTimer onTaskUpdate={vi.fn()} profileId={1} />)); });
         });
         Then('the {string} button should be disabled', (_ctx, name: string) => {
             expect(within(container).getByRole('button', { name })).toBeDisabled();
@@ -49,7 +50,7 @@ describeFeature(feature, ({ Scenario }) => {
         Given('the TaskTimer is rendered with no active task', async (_ctx) => {
             cleanup();
             global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ task: null }) });
-            await act(async () => { ({ container } = render(<TaskTimer onTaskUpdate={vi.fn()} />)); });
+            await act(async () => { ({ container } = render(<TaskTimer onTaskUpdate={vi.fn()} profileId={1} />)); });
         });
         When('I type {string} in the description input', async (_ctx, text: string) => {
             await userEvent.type(within(container).getByPlaceholderText('What are you working on?'), text);
@@ -64,7 +65,7 @@ describeFeature(feature, ({ Scenario }) => {
         Given('the TaskTimer is rendered with no active task', async (_ctx) => {
             cleanup();
             global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ task: null }) });
-            await act(async () => { ({ container } = render(<TaskTimer onTaskUpdate={vi.fn()} />)); });
+            await act(async () => { ({ container } = render(<TaskTimer onTaskUpdate={vi.fn()} profileId={1} />)); });
         });
         When('I press Enter in the description input', async (_ctx) => {
             await act(async () => {
@@ -81,7 +82,7 @@ describeFeature(feature, ({ Scenario }) => {
         Given('the TaskTimer is rendered with no active task', async (_ctx) => {
             cleanup();
             global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ task: null }) });
-            await act(async () => { ({ container } = render(<TaskTimer onTaskUpdate={vi.fn()} />)); });
+            await act(async () => { ({ container } = render(<TaskTimer onTaskUpdate={vi.fn()} profileId={1} />)); });
         });
         And('the API will accept a new task', (_ctx) => {
             global.fetch = vi.fn()
@@ -111,7 +112,7 @@ describeFeature(feature, ({ Scenario }) => {
                 ok: true,
                 json: async () => ({ task: makeActiveTask(description) }),
             });
-            await act(async () => { ({ container } = render(<TaskTimer onTaskUpdate={vi.fn()} />)); });
+            await act(async () => { ({ container } = render(<TaskTimer onTaskUpdate={vi.fn()} profileId={1} />)); });
         });
         Then('I should see the {string} button', (_ctx, name: string) => {
             expect(within(container).getByRole('button', { name })).toBeInTheDocument();

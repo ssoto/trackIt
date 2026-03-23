@@ -21,6 +21,9 @@ async function waitForTask(page: Page, description: string, timeout = 5000) {
 
 test.describe('Task creation', () => {
     test.beforeEach(async ({ page }) => {
+        await page.addInitScript(() => {
+            localStorage.setItem('trackit:activeProfileId', '1');
+        });
         await page.goto('/');
         await page.waitForSelector('[class*="animate-spin"]', { state: 'detached', timeout: 10_000 });
     });
@@ -74,6 +77,9 @@ test.describe('Task creation', () => {
 
 test.describe('Task deletion', () => {
     test.beforeEach(async ({ page }) => {
+        await page.addInitScript(() => {
+            localStorage.setItem('trackit:activeProfileId', '1');
+        });
         await page.goto('/');
         await page.waitForSelector('[class*="animate-spin"]', { state: 'detached', timeout: 10_000 });
     });
@@ -115,6 +121,9 @@ test.describe('Task deletion', () => {
 
 test.describe('Task status', () => {
     test.beforeEach(async ({ page }) => {
+        await page.addInitScript(() => {
+            localStorage.setItem('trackit:activeProfileId', '1');
+        });
         await page.goto('/');
         await page.waitForSelector('[class*="animate-spin"]', { state: 'detached', timeout: 10_000 });
     });
